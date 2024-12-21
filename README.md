@@ -27,10 +27,10 @@ Add the following script tag BEFORE your Alpine.js core script:
 
 ```html
 <!-- Zoomable Plugin (example version) -->
-<script defer src="https://cdn.jsdelivr.net/npm/@benbjurstrom/alpinejs-zoomable/dist/cdn.min.js"></script>
+<script defer src="https://unpkg.com/@benbjurstrom/alpinejs-zoomable@0.1.0/dist/cdn.min.js"></script>
 
 <!-- Alpine Core -->
-<script defer src="https://cdn.jsdelivr.net/npm/[email protected]/dist/cdn.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 ```
 
 ## Usage
