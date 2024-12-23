@@ -13,7 +13,8 @@
   "module": "dist/module.esm.js",
   "unpkg": "dist/cdn.min.js",
   "devDependencies": {
-    "esbuild": "~0.16.17"
+    "esbuild": "~0.16.17",
+    "prettier": "3.4.2"
   },
   "scripts": {
     "build": "node ./scripts/build.js"
