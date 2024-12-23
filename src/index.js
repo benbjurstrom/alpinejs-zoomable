@@ -45,19 +45,19 @@ export default function (Alpine) {
 
       const zoomInBtn = document.createElement('button');
       zoomInBtn.className = 'zoomable-control-button zoomable-zoom-in';
-      zoomInBtn.innerHTML = '+';
+      zoomInBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>';
       zoomInBtn.setAttribute('aria-label', 'Zoom in');
       zoomInBtn.setAttribute('tabindex', '0');
 
       const zoomOutBtn = document.createElement('button');
       zoomOutBtn.className = 'zoomable-control-button zoomable-zoom-out';
-      zoomOutBtn.innerHTML = '−';
+      zoomOutBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" /></svg>';
       zoomOutBtn.setAttribute('aria-label', 'Zoom out');
       zoomOutBtn.setAttribute('tabindex', '0');
 
       const closeBtn = document.createElement('button');
       closeBtn.className = 'zoomable-control-button zoomable-close';
-      closeBtn.innerHTML = '×';
+      closeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>';
       closeBtn.setAttribute('aria-label', 'Close fullscreen view');
       closeBtn.setAttribute('tabindex', '0');
 
@@ -101,6 +101,11 @@ export default function (Alpine) {
   }
 
   function setFocusTrap() {
+      if (('ontouchstart' in window) ||
+          (navigator.maxTouchPoints > 0)) {
+          return;
+      }
+
       focusableElements = container.querySelectorAll(focusableSelectors);
       if (focusableElements.length > 0) {
           firstFocusableElement = focusableElements[0];
@@ -223,15 +228,34 @@ export default function (Alpine) {
       }
   }
 
-  // Attach global event listeners (only once).
+  function addButtonListeners(button, handler) {
+      const handleTouch = (e) => {
+          e.preventDefault();
+          handler(e);
+      };
+
+      button.addEventListener('click', handler);
+      button.addEventListener('touchend', handleTouch);
+
+      // Return cleanup function
+      return () => {
+          button.removeEventListener('click', handler);
+          button.removeEventListener('touchend', handleTouch);
+      };
+  }
+
+  // Add listeners and store cleanup functions
   const zoomInBtn = container.querySelector('.zoomable-zoom-in');
   const zoomOutBtn = container.querySelector('.zoomable-zoom-out');
   const closeBtn = container.querySelector('.zoomable-close');
 
-  zoomInBtn.addEventListener('click', zoomIn);
-  zoomOutBtn.addEventListener('click', zoomOut);
-  closeBtn.addEventListener('click', closeImage);
+  const cleanupFunctions = [
+      addButtonListeners(zoomInBtn, zoomIn),
+      addButtonListeners(zoomOutBtn, zoomOut),
+      addButtonListeners(closeBtn, closeImage)
+  ];
 
+  // Attach other global event listeners
   container.addEventListener('mousedown', startDragging);
   window.addEventListener('mousemove', drag);
   window.addEventListener('mouseup', stopDragging);
@@ -256,6 +280,17 @@ export default function (Alpine) {
       // Cleanup when element is removed
       cleanup(() => {
           el.removeEventListener('click', onClick);
+          // Clean up button listeners
+          cleanupFunctions.forEach(cleanup => cleanup());
+          // Clean up other global listeners
+          container.removeEventListener('mousedown', startDragging);
+          window.removeEventListener('mousemove', drag);
+          window.removeEventListener('mouseup', stopDragging);
+          container.removeEventListener('touchstart', startDragging);
+          container.removeEventListener('touchmove', drag);
+          container.removeEventListener('touchend', stopDragging);
+          container.removeEventListener('touchmove', preventDefault);
+          document.removeEventListener('keydown', onKeyDown);
       });
   });
 }

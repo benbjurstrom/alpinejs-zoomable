@@ -112,8 +112,12 @@ To allow for maxiumum customization this plugin does not include any styles. Bel
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 20px;
         transition: background-color 0.2s;
+    }
+
+    .zoomable-control-button > svg {
+        width: 20px;
+        height: 20px;
     }
 
     .zoomable-control-button:hover,
@@ -128,9 +132,11 @@ To allow for maxiumum customization this plugin does not include any styles. Bel
             right: 10px;
         }
 
-        .control-button {
+        .zoomable-control-button {
             width: 44px;
             height: 44px;
+            -webkit-tap-highlight-color: transparent; /* Prevents gray flash on iOS */
+            touch-action: manipulation; /* Optimize for touch */
         }
     }
 
