@@ -1,6 +1,6 @@
 {
   "name": "@benbjurstrom/alpinejs-zoomable",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Fullscreen image viewer (lightbox) for Alpine.js.",
   "homepage": "https://github.com/benbjurstrom/alpinejs-zoomable",
   "repository": {
