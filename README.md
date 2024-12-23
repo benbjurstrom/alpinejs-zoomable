@@ -1,3 +1,5 @@
+![zoomable](https://github.com/user-attachments/assets/eda8c6b2-03ee-4a28-bc5f-262540863f3e)
+
 # @benbjurstrom/alpinejs-zoomable
 
 A fullscreen image viewer (lightbox) for Alpine.js, which offers modern accessibility features.
