@@ -11,6 +11,9 @@ importers:
       esbuild:
         specifier: ~0.16.17
         version: 0.16.17
+      prettier:
+        specifier: 3.4.2
+        version: 3.4.2
 
 packages:
 
@@ -151,6 +154,11 @@ packages:
     engines: {node: '>=12'}
     hasBin: true
 
+  prettier@3.4.2:
+    resolution: {integrity: sha512-e9MewbtFo+Fevyuxn/4rrcDAaq0IYxPGLvObpQjiZBMAzB9IGmzlnG9RZy3FFas+eBMu2vA0CszMeduow5dIuQ==}
+    engines: {node: '>=14'}
+    hasBin: true
+
 snapshots:
 
   '@esbuild/android-arm64@0.16.17':
@@ -243,3 +251,5 @@ snapshots:
       '@esbuild/win32-arm64': 0.16.17
       '@esbuild/win32-ia32': 0.16.17
       '@esbuild/win32-x64': 0.16.17
+
+  prettier@3.4.2: {}
