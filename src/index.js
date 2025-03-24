@@ -1,5 +1,4 @@
 export default function (Alpine) {
-  // Create a single fullscreen container, image, controls, etc. for reuse.
   let isFullscreen = false
   let isDragging = false
   let startX = 0
@@ -9,7 +8,7 @@ export default function (Alpine) {
   let currentScale = 1
   let baseScale = 1
 
-  // Check if container already exists to avoid duplicates (e.g. in hot-reloading scenarios)
+  // Attempt to find existing container in the DOM
   let container = document.querySelector('.zoomable-fullscreen-container')
   if (!container) {
     container = document.createElement('div')
@@ -20,7 +19,7 @@ export default function (Alpine) {
     document.body.appendChild(container)
   }
 
-  // Loading indicator
+  // Make sure we have the loading indicator
   let loadingIndicator = container.querySelector('.zoomable-loading-indicator')
   if (!loadingIndicator) {
     loadingIndicator = document.createElement('div')
@@ -37,7 +36,7 @@ export default function (Alpine) {
     container.appendChild(loadingIndicator)
   }
 
-  // Controls panel
+  // Make sure we have the controls panel
   let controlsPanel = container.querySelector('.zoomable-controls-panel')
   if (!controlsPanel) {
     controlsPanel = document.createElement('div')
@@ -46,21 +45,31 @@ export default function (Alpine) {
     const zoomInBtn = document.createElement('button')
     zoomInBtn.className = 'zoomable-control-button zoomable-zoom-in'
     zoomInBtn.innerHTML =
-      '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>'
+      '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" ' +
+      'stroke-width="1.5" stroke="currentColor">' +
+      '<path stroke-linecap="round" stroke-linejoin="round" ' +
+      'd="M12 4.5v15m7.5-7.5h-15" />' +
+      '</svg>'
     zoomInBtn.setAttribute('aria-label', 'Zoom in')
     zoomInBtn.setAttribute('tabindex', '0')
 
     const zoomOutBtn = document.createElement('button')
     zoomOutBtn.className = 'zoomable-control-button zoomable-zoom-out'
     zoomOutBtn.innerHTML =
-      '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" /></svg>'
+      '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" ' +
+      'stroke-width="1.5" stroke="currentColor">' +
+      '<path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />' +
+      '</svg>'
     zoomOutBtn.setAttribute('aria-label', 'Zoom out')
     zoomOutBtn.setAttribute('tabindex', '0')
 
     const closeBtn = document.createElement('button')
     closeBtn.className = 'zoomable-control-button zoomable-close'
     closeBtn.innerHTML =
-      '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>'
+      '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" ' +
+      'stroke-width="1.5" stroke="currentColor">' +
+      '<path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />' +
+      '</svg>'
     closeBtn.setAttribute('aria-label', 'Close fullscreen view')
     closeBtn.setAttribute('tabindex', '0')
 
@@ -70,7 +79,7 @@ export default function (Alpine) {
     container.appendChild(controlsPanel)
   }
 
-  // Fullscreen image
+  // Make sure we have the fullscreen <img>
   let fullscreenImg = container.querySelector('.zoomable-fullscreen-image')
   if (!fullscreenImg) {
     fullscreenImg = document.createElement('img')
@@ -79,7 +88,9 @@ export default function (Alpine) {
     container.appendChild(fullscreenImg)
   }
 
-  // Focus trapping
+  // -----------------------------
+  // Focus trapping helpers
+  // -----------------------------
   const focusableSelectors = 'button'
   let focusableElements = []
   let firstFocusableElement = null
@@ -104,10 +115,10 @@ export default function (Alpine) {
   }
 
   function setFocusTrap() {
+    // Skip for touch devices
     if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
       return
     }
-
     focusableElements = container.querySelectorAll(focusableSelectors)
     if (focusableElements.length > 0) {
       firstFocusableElement = focusableElements[0]
@@ -116,7 +127,17 @@ export default function (Alpine) {
     }
   }
 
+  // -----------------------------
+  // Opening/closing image logic
+  // -----------------------------
   function openImage(sourceImg) {
+    // If container was removed from DOM (e.g. due to wire:navigate),
+    // re-append it and re-attach event listeners.
+    if (!document.body.contains(container)) {
+      document.body.appendChild(container)
+      attachContainerListeners()
+    }
+
     fullscreenImg.src = sourceImg.src
     fullscreenImg.alt = sourceImg.alt || 'Enlarged image view'
     container.style.display = 'block'
@@ -166,6 +187,9 @@ export default function (Alpine) {
     document.removeEventListener('keydown', trapFocus)
   }
 
+  // -----------------------------
+  // Zoom & drag logic
+  // -----------------------------
   function updateImagePosition() {
     fullscreenImg.style.transform = `translate(calc(-50% + ${translateX}px), calc(-50% + ${translateY}px)) scale(${currentScale})`
   }
@@ -182,9 +206,11 @@ export default function (Alpine) {
 
   function startDragging(e) {
     if (!isFullscreen) return
+    // If user clicked inside the controls panel, don’t drag the image
     if (e.target.closest('.controls-panel')) {
       return
     }
+    // If user clicked the blank area behind the image, treat that as close
     if (e.target === container) {
       closeImage()
       return
@@ -231,46 +257,58 @@ export default function (Alpine) {
     }
   }
 
+  // -----------------------------
+  // Helper to attach button & global listeners
+  // -----------------------------
   function addButtonListeners(button, handler) {
     const handleTouch = (e) => {
       e.preventDefault()
       handler(e)
     }
-
     button.addEventListener('click', handler)
     button.addEventListener('touchend', handleTouch)
 
-    // Return cleanup function
+    // Return a cleanup function if needed
     return () => {
       button.removeEventListener('click', handler)
       button.removeEventListener('touchend', handleTouch)
     }
   }
 
-  // Add listeners and store cleanup functions
-  const zoomInBtn = container.querySelector('.zoomable-zoom-in')
-  const zoomOutBtn = container.querySelector('.zoomable-zoom-out')
-  const closeBtn = container.querySelector('.zoomable-close')
+  function attachContainerListeners() {
+    // If we've already attached them and container is still in the DOM, skip
+    if (container.dataset.hasListeners === 'true') return
 
-  const cleanupFunctions = [
+    // Mark as attached
+    container.dataset.hasListeners = 'true'
+
+    // Attach button listeners
+    const zoomInBtn = container.querySelector('.zoomable-zoom-in')
+    const zoomOutBtn = container.querySelector('.zoomable-zoom-out')
+    const closeBtn = container.querySelector('.zoomable-close')
+
     addButtonListeners(zoomInBtn, zoomIn),
-    addButtonListeners(zoomOutBtn, zoomOut),
-    addButtonListeners(closeBtn, closeImage),
-  ]
+      addButtonListeners(zoomOutBtn, zoomOut),
+      addButtonListeners(closeBtn, closeImage),
+      // Attach global event listeners
+      container.addEventListener('mousedown', startDragging)
+    window.addEventListener('mousemove', drag)
+    window.addEventListener('mouseup', stopDragging)
 
-  // Attach other global event listeners
-  container.addEventListener('mousedown', startDragging)
-  window.addEventListener('mousemove', drag)
-  window.addEventListener('mouseup', stopDragging)
+    container.addEventListener('touchstart', startDragging, { passive: false })
+    container.addEventListener('touchmove', drag, { passive: false })
+    container.addEventListener('touchend', stopDragging)
+    container.addEventListener('touchmove', preventDefault, { passive: false })
 
-  container.addEventListener('touchstart', startDragging, { passive: false })
-  container.addEventListener('touchmove', drag, { passive: false })
-  container.addEventListener('touchend', stopDragging)
-  container.addEventListener('touchmove', preventDefault, { passive: false })
+    document.addEventListener('keydown', onKeyDown)
+  }
 
-  document.addEventListener('keydown', onKeyDown)
+  // Attach them once on page load
+  attachContainerListeners()
 
-  // Alpine directive definition
+  // -----------------------------
+  // Alpine directive
+  // -----------------------------
   Alpine.directive('zoomable', (el, { expression }, { cleanup }) => {
     if (el.tagName.toLowerCase() !== 'img') {
       console.error(
@@ -283,20 +321,11 @@ export default function (Alpine) {
     const onClick = () => openImage(el)
     el.addEventListener('click', onClick)
 
-    // Cleanup when element is removed
+    // On directive cleanup, only remove the <img> click event
+    // Do NOT remove the container’s global event listeners here—
+    // those are meant to be persistent throughout.
     cleanup(() => {
       el.removeEventListener('click', onClick)
-      // Clean up button listeners
-      cleanupFunctions.forEach((cleanup) => cleanup())
-      // Clean up other global listeners
-      container.removeEventListener('mousedown', startDragging)
-      window.removeEventListener('mousemove', drag)
-      window.removeEventListener('mouseup', stopDragging)
-      container.removeEventListener('touchstart', startDragging)
-      container.removeEventListener('touchmove', drag)
-      container.removeEventListener('touchend', stopDragging)
-      container.removeEventListener('touchmove', preventDefault)
-      document.removeEventListener('keydown', onKeyDown)
     })
   })
 }
